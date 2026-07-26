@@ -6,15 +6,13 @@
     <title>E-KERTALANGU - Sistem Absensi Pengajian</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode.js/1.4.4/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
     <div id="app">
         <!-- Loading Screen -->
         <div id="loadingScreen" class="loading-screen">
             <div class="spinner"></div>
-            <p>Memuat E-KERTALANGU...</p>
+            <p>🕌 Memuat E-KERTALANGU...</p>
         </div>
 
         <!-- Login Page -->
@@ -24,7 +22,7 @@
                     <div class="logo">
                         <h1>🕌</h1>
                         <h2>E-KERTALANGU</h2>
-                        <p>Sistem Absensi Pengajian</p>
+                        <p>Sistem Absensi Pengajian Modern</p>
                     </div>
                     <form id="loginForm">
                         <div class="form-group">
@@ -35,9 +33,9 @@
                             <label>Password</label>
                             <input type="password" id="loginPassword" placeholder="Masukkan password" required>
                         </div>
-                        <button type="submit" class="btn btn-primary">Login</button>
+                        <button type="submit" class="btn btn-primary">🔓 Login</button>
                     </form>
-                    <p class="login-info">Demo: admin/admin | pengurus/pengurus | jamaah/jamaah</p>
+                    <p class="login-info">📌 Demo: admin/admin | pengurus/pengurus | jamaah/jamaah</p>
                 </div>
             </div>
         </div>
@@ -56,64 +54,63 @@
 
             <div class="container">
                 <div class="tabs">
-                    <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
-                    <button class="tab-btn" data-tab="jamaah">Peserta</button>
-                    <button class="tab-btn" data-tab="kegiatan">Kegiatan</button>
-                    <button class="tab-btn" data-tab="absensi">Absensi</button>
-                    <button class="tab-btn" data-tab="musyawarah">Musyawarah</button>
-                    <button class="tab-btn" data-tab="laporan">Laporan</button>
+                    <button class="tab-btn active" data-tab="dashboard">📊 Dashboard</button>
+                    <button class="tab-btn" data-tab="jamaah">👥 Peserta</button>
+                    <button class="tab-btn" data-tab="kegiatan">📅 Kegiatan</button>
+                    <button class="tab-btn" data-tab="absensi">✅ Absensi</button>
+                    <button class="tab-btn" data-tab="musyawarah">📝 Catatan</button>
+                    <button class="tab-btn" data-tab="laporan">📈 Laporan</button>
                 </div>
 
                 <!-- Dashboard Tab -->
                 <div id="dashboard" class="tab-content active">
-                    <h2>Dashboard Admin</h2>
+                    <h2>📊 Dashboard Admin</h2>
                     <div class="dashboard-grid">
                         <div class="card">
-                            <h3>Total Jamaah</h3>
+                            <h3>👥 Total Jamaah</h3>
                             <p class="big-number" id="totalJamaah">0</p>
                         </div>
                         <div class="card">
-                            <h3>Kegiatan Bulan Ini</h3>
+                            <h3>📅 Kegiatan Bulan Ini</h3>
                             <p class="big-number" id="kegiatanBulan">0</p>
                         </div>
                         <div class="card">
-                            <h3>Kehadiran Rata-rata</h3>
+                            <h3>📈 Kehadiran Rata-rata</h3>
                             <p class="big-number" id="avgKehadiran">0%</p>
                         </div>
                         <div class="card">
-                            <h3>Catatan Musyawarah</h3>
+                            <h3>📝 Catatan Musyawarah</h3>
                             <p class="big-number" id="totalMusyawarah">0</p>
                         </div>
                     </div>
 
-                    <h3>Kegiatan Hari Ini</h3>
+                    <h3>🔔 Kegiatan Hari Ini</h3>
                     <div id="kegiatanHariIni" class="kegiatan-list"></div>
                 </div>
 
                 <!-- Jamaah Tab -->
                 <div id="jamaah" class="tab-content">
-                    <h2>Manajemen Peserta</h2>
+                    <h2>👥 Manajemen Peserta</h2>
                     <div class="toolbar">
-                        <input type="text" id="searchJamaah" placeholder="Cari nama peserta (ketik 2 huruf)" class="search-input">
-                        <button class="btn btn-primary" onclick="showFormTambahJamaah()">+ Tambah Peserta</button>
-                        <button class="btn btn-secondary" onclick="exportJamaahExcel()">📥 Export Excel</button>
-                        <button class="btn btn-secondary" onclick="showImportForm()">📤 Import Data</button>
+                        <input type="text" id="searchJamaah" placeholder="🔍 Cari nama peserta (ketik 2 huruf)" class="search-input">
+                        <button class="btn btn-primary" onclick="showFormTambahJamaah()">➕ Tambah Peserta</button>
+                        <button class="btn btn-secondary" onclick="exportJamaahExcel()">📥 Export</button>
                     </div>
                     <div id="jamaahTable" class="table-container"></div>
                 </div>
 
                 <!-- Kegiatan Tab -->
                 <div id="kegiatan" class="tab-content">
-                    <h2>Manajemen Kegiatan</h2>
+                    <h2>📅 Manajemen Kegiatan</h2>
                     <div class="toolbar">
-                        <button class="btn btn-primary" onclick="showFormTambahKegiatan()">+ Buat Kegiatan</button>
+                        <button class="btn btn-primary" onclick="showFormTambahKegiatan()">➕ Buat Kegiatan</button>
                     </div>
                     <div id="kegiatanTable" class="table-container"></div>
                 </div>
 
                 <!-- Absensi Tab -->
                 <div id="absensi" class="tab-content">
-                    <h2>Kelola Absensi</h2>
+                    <h2>✅ Kelola Absensi</h2>
                     <div class="toolbar">
                         <select id="filterKegiatan" class="form-control">
                             <option value="">Pilih Kegiatan</option>
@@ -122,20 +119,24 @@
                     <div id="absensiTable" class="table-container"></div>
                 </div>
 
-                <!-- Musyawarah Tab -->
+                <!-- Catatan Tab -->
                 <div id="musyawarah" class="tab-content">
-                    <h2>Catatan Musyawarah</h2>
-                    <div class="toolbar">
-                        <select id="filterKegiatanMusyawarah" class="form-control">
-                            <option value="">Pilih Kegiatan</option>
-                        </select>
+                    <h2>📝 Catatan Musyawarah</h2>
+                    <div class="tabs" style="margin: 20px 0 30px 0;">
+                        <button class="tab-btn active" data-tab="musyawarah4s">4S</button>
+                        <button class="tab-btn" data-tab="musyawarahtim7">Tim 7</button>
                     </div>
-                    <div id="musyawarahList" class="list-container"></div>
+                    <div id="musyawarah4s" class="tab-content active">
+                        <div id="musyawarahContainer" class="list-container"></div>
+                    </div>
+                    <div id="musyawarahtim7" class="tab-content">
+                        <div id="tim7Container" class="list-container"></div>
+                    </div>
                 </div>
 
                 <!-- Laporan Tab -->
                 <div id="laporan" class="tab-content">
-                    <h2>Laporan & Statistik</h2>
+                    <h2>📈 Laporan & Statistik</h2>
                     <div class="toolbar">
                         <select id="filterBulanLaporan" class="form-control">
                             <option value="">Pilih Bulan</option>
@@ -161,15 +162,15 @@
 
             <div class="container">
                 <div class="tabs">
-                    <button class="tab-btn active" data-tab="scanqr">Scan QR</button>
-                    <button class="tab-btn" data-tab="rekap">Rekap Kehadiran</button>
-                    <button class="tab-btn" data-tab="musyawarahpengurus">Catatan Musyawarah</button>
-                    <button class="tab-btn" data-tab="jadwal">Jadwal Kegiatan</button>
+                    <button class="tab-btn active" data-tab="scanqr">📱 Scan QR</button>
+                    <button class="tab-btn" data-tab="rekap">📊 Rekap</button>
+                    <button class="tab-btn" data-tab="musyawarahpengurus">📝 Catatan</button>
+                    <button class="tab-btn" data-tab="jadwal">📅 Jadwal</button>
                 </div>
 
                 <!-- Scan QR Tab -->
                 <div id="scanqr" class="tab-content active">
-                    <h2>Scan QR Absensi</h2>
+                    <h2>📱 Scan QR Absensi</h2>
                     <div class="toolbar">
                         <select id="kegiatanScan" class="form-control">
                             <option value="">Pilih Kegiatan</option>
@@ -180,14 +181,14 @@
                         <div id="qrResult" class="qr-result" style="display:none;"></div>
                         <button class="btn btn-primary" onclick="startCamera()">📱 Buka Kamera Scan QR</button>
                         <input type="text" id="manualInput" placeholder="Atau input manual ID peserta" class="input-manual">
-                        <button class="btn btn-primary" onclick="processAbsensi()">Proses Absensi</button>
+                        <button class="btn btn-primary" onclick="processAbsensi()">✅ Proses Absensi</button>
                     </div>
                     <div id="resultAbsensi" class="result-container"></div>
                 </div>
 
                 <!-- Rekap Tab -->
                 <div id="rekap" class="tab-content">
-                    <h2>Rekap Kehadiran</h2>
+                    <h2>📊 Rekap Kehadiran</h2>
                     <div class="toolbar">
                         <select id="filterKegiatanRekap" class="form-control">
                             <option value="">Pilih Kegiatan</option>
@@ -197,21 +198,19 @@
                     <div id="rekapContainer" class="report-container"></div>
                 </div>
 
-                <!-- Musyawarah Pengurus Tab -->
+                <!-- Catatan Tab -->
                 <div id="musyawarahpengurus" class="tab-content">
-                    <h2>Catatan Musyawarah</h2>
+                    <h2>📝 Catatan Musyawarah</h2>
                     <div class="toolbar">
-                        <select id="filterKegiatanMusyawarahPengurus" class="form-control">
-                            <option value="">Pilih Kegiatan</option>
-                        </select>
-                        <button class="btn btn-primary" onclick="tambahMusyawarah()">+ Buat Catatan</button>
+                        <button class="btn btn-primary" onclick="tambahMusyawarah4S()" style="margin-right: 10px;">➕ Catatan 4S</button>
+                        <button class="btn btn-primary" onclick="tambahMusyawarahTim7()">➕ Catatan Tim 7</button>
                     </div>
                     <div id="musyawarahPengurusList" class="list-container"></div>
                 </div>
 
                 <!-- Jadwal Tab -->
                 <div id="jadwal" class="tab-content">
-                    <h2>Jadwal Kegiatan</h2>
+                    <h2>📅 Jadwal Kegiatan</h2>
                     <div id="jadwalList" class="list-container"></div>
                 </div>
             </div>
@@ -231,26 +230,26 @@
 
             <div class="container">
                 <div class="tabs">
-                    <button class="tab-btn active" data-tab="profiljamaah">Profil</button>
-                    <button class="tab-btn" data-tab="kehadiranjamaah">Kehadiran</button>
-                    <button class="tab-btn" data-tab="jadwaljamaah">Jadwal Kegiatan</button>
+                    <button class="tab-btn active" data-tab="profiljamaah">👤 Profil</button>
+                    <button class="tab-btn" data-tab="kehadiranjamaah">📊 Kehadiran</button>
+                    <button class="tab-btn" data-tab="jadwaljamaah">📅 Jadwal</button>
                 </div>
 
                 <!-- Profil Tab -->
                 <div id="profiljamaah" class="tab-content active">
-                    <h2>Profil Saya</h2>
+                    <h2>👤 Profil Saya</h2>
                     <div id="profilContainer" class="profile-container"></div>
                 </div>
 
                 <!-- Kehadiran Tab -->
                 <div id="kehadiranjamaah" class="tab-content">
-                    <h2>Statistik Kehadiran Saya</h2>
+                    <h2>📊 Statistik Kehadiran</h2>
                     <div id="kehadiranJamaahContainer" class="report-container"></div>
                 </div>
 
                 <!-- Jadwal Tab -->
                 <div id="jadwaljamaah" class="tab-content">
-                    <h2>Jadwal Kegiatan</h2>
+                    <h2>📅 Jadwal Kegiatan</h2>
                     <div id="jadwalJamaahList" class="list-container"></div>
                 </div>
             </div>
@@ -267,6 +266,6 @@
 
     <script src="config.js"></script>
     <script src="api.js"></script>
-    <script src="app.js"></script>
+    <script src="updated-app.js"></script>
 </body>
 </html>
