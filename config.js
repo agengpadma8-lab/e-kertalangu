@@ -1,7 +1,7 @@
 // E-KERTALANGU Configuration
 const CONFIG = {
     SPREADSHEET_ID: '1JDDFEFG7PG1VnHFtQRII6SThtBDGVozEdxlxTM25hYU',
-    APPS_SCRIPT_URL: '', // Will be filled after Apps Script deployment
+    APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbx2WLgPdIzWhK2iCzZcsyY4VrJU9qSc54j-ZjkrUXK4Md32ay_A9TovIT1RTslsPTUx/exec',
     
     // Jenis Kegiatan
     JENIS_KEGIATAN: [
