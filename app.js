@@ -1,6 +1,7 @@
-// Main Application Logic
+// Main Application Logic - UPDATED VERSION
 
 let currentUser = null;
+let apiUrl = ''; // Will be set after Apps Script deployment
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
@@ -94,10 +95,11 @@ function showDashboard() {
 
 function handleTabClick(e) {
     const tabName = e.target.dataset.tab;
+    const parent = e.target.closest('.tabs').parentElement;
     
-    // Deactivate all tabs
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    // Deactivate all tabs in this container
+    parent.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    parent.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     
     // Activate selected tab
     e.target.classList.add('active');
@@ -124,6 +126,12 @@ function loadTabData(tabName) {
         case 'rekap':
             loadRekapKehadiran();
             break;
+        case 'musyawarah4s':
+            loadMusyawarah4S();
+            break;
+        case 'musyawarahtim7':
+            loadMusyawarahTim7();
+            break;
         case 'jadwal':
             loadJadwalKegiatan();
             break;
@@ -147,14 +155,16 @@ async function loadAdminDashboard() {
     const today = new Date().toISOString().split('T')[0];
     const kegiatanHariIni = kegiatan.filter(k => k.tanggal === today);
     const container = document.getElementById('kegiatanHariIni');
-    container.innerHTML = kegiatanHariIni.map(k => `
-        <div class="kegiatan-item">
-            <h4>${k.nama}</h4>
-            <div class="kegiatan-item-detail">⏰ ${k.jamMulai} - ${k.jamSelesai}</div>
-            <div class="kegiatan-item-detail">📍 ${k.lokasi}</div>
-            <div class="kegiatan-item-detail">👥 ${k.pesertaTerdaftar} peserta</div>
-        </div>
-    `).join('');
+    container.innerHTML = kegiatanHariIni.length > 0 ? 
+        kegiatanHariIni.map(k => `
+            <div class="kegiatan-item">
+                <h4>${k.nama}</h4>
+                <div class="kegiatan-item-detail">⏰ ${k.jamMulai} - ${k.jamSelesai}</div>
+                <div class="kegiatan-item-detail">📍 ${k.lokasi}</div>
+                <div class="kegiatan-item-detail">👥 ${k.pesertaTerdaftar} peserta</div>
+            </div>
+        `).join('') :
+        '<p style="padding: 20px; text-align: center; color: #999;">Tidak ada kegiatan hari ini</p>';
 }
 
 async function loadJamaahTable() {
@@ -183,7 +193,7 @@ async function loadJamaahTable() {
             <tbody>
                 ${jamaah.map(j => `
                     <tr>
-                        <td>${j.id}</td>
+                        <td><strong>${j.id}</strong></td>
                         <td>${j.nama}</td>
                         <td>${j.gender}</td>
                         <td>${j.noHp}</td>
@@ -191,8 +201,8 @@ async function loadJamaahTable() {
                         <td>${j.pendidikan}</td>
                         <td><span class="status-badge status-${j.status.toLowerCase()}">${j.status}</span></td>
                         <td>
-                            <button class="btn btn-secondary" onclick="editJamaah('${j.id}')">✎</button>
-                            <button class="btn btn-danger" onclick="deleteJamaah('${j.id}')">🗑</button>
+                            <button class="btn btn-sm btn-secondary" onclick="editJamaah('${j.id}')">✏️</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteJamaah('${j.id}')">🗑</button>
                         </td>
                     </tr>
                 `).join('')}
@@ -228,7 +238,7 @@ async function loadKegiatanTable() {
             <tbody>
                 ${kegiatan.map(k => `
                     <tr>
-                        <td>${k.id}</td>
+                        <td><strong>${k.id}</strong></td>
                         <td>${k.nama}</td>
                         <td>${k.jenis}</td>
                         <td>${k.tanggal}</td>
@@ -236,8 +246,8 @@ async function loadKegiatanTable() {
                         <td>${k.lokasi}</td>
                         <td><span class="status-badge status-aktif">${k.status}</span></td>
                         <td>
-                            <button class="btn btn-secondary" onclick="editKegiatan('${k.id}')">✎</button>
-                            <button class="btn btn-danger" onclick="deleteKegiatan('${k.id}')">🗑</button>
+                            <button class="btn btn-sm btn-secondary" onclick="editKegiatan('${k.id}')">✏️</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteKegiatan('${k.id}')">🗑</button>
                         </td>
                     </tr>
                 `).join('')}
@@ -285,56 +295,115 @@ async function loadRekapKehadiran() {
     const izin = absensi.filter(a => a.status === 'Izin').length;
     const alpha = absensi.filter(a => a.status === 'Alpha').length;
     
-    const hPercent = Math.round((hadir / total) * 100);
-    const iPercent = Math.round((izin / total) * 100);
-    const aPercent = Math.round((alpha / total) * 100);
+    const hPercent = total > 0 ? Math.round((hadir / total) * 100) : 0;
+    const iPercent = total > 0 ? Math.round((izin / total) * 100) : 0;
+    const aPercent = total > 0 ? Math.round((alpha / total) * 100) : 0;
     
     const container = document.getElementById('rekapContainer');
     container.innerHTML = `
-        <div style="background: white; padding: 20px; border-radius: 8px;">
-            <h3>Rekap Kehadiran</h3>
-            <div style="margin: 20px 0;">
-                <div style="font-size: 18px; font-weight: bold; margin: 10px 0;">
-                    Total: ${total} orang
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 12px; margin-bottom: 20px;">
+            <h3 style="margin-bottom: 20px;">📊 Rekap Kehadiran</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px;">
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                    <div style="font-size: 14px; opacity: 0.9;">Total</div>
+                    <div style="font-size: 32px; font-weight: bold;">${total}</div>
                 </div>
-                <div style="font-size: 18px; font-weight: bold; margin: 10px 0; color: green;">
-                    ✅ Hadir: ${hadir} orang
+                <div style="background: rgba(39,174,96,0.3); padding: 15px; border-radius: 8px;">
+                    <div style="font-size: 14px;">✅ Hadir</div>
+                    <div style="font-size: 32px; font-weight: bold;">${hadir}</div>
                 </div>
-                <div style="font-size: 18px; font-weight: bold; margin: 10px 0; color: orange;">
-                    ⏳ Izin: ${izin} orang
+                <div style="background: rgba(243,156,18,0.3); padding: 15px; border-radius: 8px;">
+                    <div style="font-size: 14px;">⏳ Izin</div>
+                    <div style="font-size: 32px; font-weight: bold;">${izin}</div>
                 </div>
-                <div style="font-size: 18px; font-weight: bold; margin: 10px 0; color: red;">
-                    ❌ Alpha: ${alpha} orang
+                <div style="background: rgba(231,76,60,0.3); padding: 15px; border-radius: 8px;">
+                    <div style="font-size: 14px;">❌ Alpha</div>
+                    <div style="font-size: 32px; font-weight: bold;">${alpha}</div>
                 </div>
             </div>
-            <div style="margin-top: 30px;">
-                <h4>📊 Persentase</h4>
-                <div class="chart">
-                    <div class="chart-bar">
-                        <div class="chart-label">Hadir</div>
-                        <div class="chart-bar-bg">
-                            <div class="chart-bar-fill" style="width: ${hPercent}%; background-color: #27ae60;"></div>
-                        </div>
-                        <div class="chart-value">${hPercent}%</div>
+        </div>
+        <div style="background: white; padding: 20px; border-radius: 8px;">
+            <h4>📈 Persentase</h4>
+            <div class="chart">
+                <div class="chart-bar">
+                    <div class="chart-label">Hadir</div>
+                    <div class="chart-bar-bg">
+                        <div class="chart-bar-fill" style="width: ${hPercent}%; background-color: #27ae60;"></div>
                     </div>
-                    <div class="chart-bar">
-                        <div class="chart-label">Izin</div>
-                        <div class="chart-bar-bg">
-                            <div class="chart-bar-fill" style="width: ${iPercent}%; background-color: #f39c12;"></div>
-                        </div>
-                        <div class="chart-value">${iPercent}%</div>
+                    <div class="chart-value">${hPercent}%</div>
+                </div>
+                <div class="chart-bar">
+                    <div class="chart-label">Izin</div>
+                    <div class="chart-bar-bg">
+                        <div class="chart-bar-fill" style="width: ${iPercent}%; background-color: #f39c12;"></div>
                     </div>
-                    <div class="chart-bar">
-                        <div class="chart-label">Alpha</div>
-                        <div class="chart-bar-bg">
-                            <div class="chart-bar-fill" style="width: ${aPercent}%; background-color: #e74c3c;"></div>
-                        </div>
-                        <div class="chart-value">${aPercent}%</div>
+                    <div class="chart-value">${iPercent}%</div>
+                </div>
+                <div class="chart-bar">
+                    <div class="chart-label">Alpha</div>
+                    <div class="chart-bar-bg">
+                        <div class="chart-bar-fill" style="width: ${aPercent}%; background-color: #e74c3c;"></div>
                     </div>
+                    <div class="chart-value">${aPercent}%</div>
                 </div>
             </div>
         </div>
     `;
+}
+
+async function loadMusyawarah4S() {
+    const container = document.getElementById('musyawarahContainer');
+    const musyawarah = await api.getMusyawarah();
+    
+    if (musyawarah.length === 0) {
+        container.innerHTML = '<p style="padding: 20px; text-align: center; color: #999;">Belum ada catatan musyawarah 4S</p>';
+        return;
+    }
+    
+    container.innerHTML = musyawarah.map(m => `
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #3498db;">
+            <h4>${m.kegiatanId}</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
+                <div>
+                    <h5 style="color: #3498db; margin-bottom: 10px;">🔵 Kiri 1 (Pengurus 1)</h5>
+                    <p style="white-space: pre-wrap; line-height: 1.6;">${m.kiri1}</p>
+                </div>
+                <div>
+                    <h5 style="color: #9b59b6; margin-bottom: 10px;">🟣 Kanan 1 (Pengurus 2)</h5>
+                    <p style="white-space: pre-wrap; line-height: 1.6;">${m.kanan1}</p>
+                </div>
+                <div>
+                    <h5 style="color: #2ecc71; margin-bottom: 10px;">🟢 Kiri 2 (Pengurus 3)</h5>
+                    <p style="white-space: pre-wrap; line-height: 1.6;">${m.kiri2}</p>
+                </div>
+                <div>
+                    <h5 style="color: #e74c3c; margin-bottom: 10px;">🔴 Kanan 2 All (Semua)</h5>
+                    <p style="white-space: pre-wrap; line-height: 1.6;">${m.kanan2}</p>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function loadMusyawarahTim7() {
+    const container = document.getElementById('tim7Container');
+    const catatan = await api.getCatatanTim7();
+    
+    if (catatan.length === 0) {
+        container.innerHTML = '<p style="padding: 20px; text-align: center; color: #999;">Belum ada catatan Tim 7</p>';
+        return;
+    }
+    
+    container.innerHTML = catatan.map(c => `
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #e74c3c;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                <h4>${c.kegiatanId}</h4>
+                <small style="color: #999;">Dibuat: ${c.tanggal}</small>
+            </div>
+            <p style="white-space: pre-wrap; line-height: 1.6;">${c.catatan}</p>
+            ${c.driveLink ? `<a href="${c.driveLink}" target="_blank" style="color: #3498db; text-decoration: none;">🔗 Lihat di Google Drive</a>` : ''}
+        </div>
+    `).join('');
 }
 
 async function loadJadwalKegiatan() {
@@ -353,34 +422,26 @@ async function loadJadwalKegiatan() {
     `).join('');
 }
 
-async function loadAdminDashboard() {
-    // Already implemented above
-}
-
 async function loadPengurusDashboard() {
-    // Load kegiatan untuk dropdown
     const kegiatan = await api.getKegiatan();
     const kegiatanSelect = document.getElementById('kegiatanScan');
-    kegiatanSelect.innerHTML = '<option value="">Pilih Kegiatan</option>' + 
-        kegiatan.map(k => `<option value="${k.id}">${k.nama}</option>`).join('');
+    if (kegiatanSelect) {
+        kegiatanSelect.innerHTML = '<option value="">Pilih Kegiatan</option>' + 
+            kegiatan.map(k => `<option value="${k.id}">${k.nama}</option>`).join('');
+    }
 }
 
 async function loadJamaahDashboard() {
-    // Load profil jamaah
     const jamaah = await api.getJamaah();
-    // Find current user's jamaah data
-    const profile = jamaah[0]; // Demo
+    const profile = jamaah[0];
     
     const container = document.getElementById('profilContainer');
     container.innerHTML = `
         <div class="profile-container">
-            <div class="profile-item">
-                <span class="profile-item-label">ID:</span>
-                <span class="profile-item-value">${profile.id}</span>
-            </div>
-            <div class="profile-item">
-                <span class="profile-item-label">Nama:</span>
-                <span class="profile-item-value">${profile.nama}</span>
+            <div style="text-align: center; margin-bottom: 30px;">
+                <div style="font-size: 60px; margin-bottom: 10px;">👤</div>
+                <h3>${profile.nama}</h3>
+                <p style="color: #999;">${profile.id}</p>
             </div>
             <div class="profile-item">
                 <span class="profile-item-label">Gender:</span>
@@ -406,6 +467,10 @@ async function loadJamaahDashboard() {
                 <span class="profile-item-label">Pendidikan:</span>
                 <span class="profile-item-value">${profile.pendidikan}</span>
             </div>
+            <div class="profile-item">
+                <span class="profile-item-label">Status:</span>
+                <span class="profile-item-value"><span class="status-badge status-${profile.status.toLowerCase()}">${profile.status}</span></span>
+            </div>
         </div>
     `;
 }
@@ -418,7 +483,6 @@ function handleSearchJamaah(e) {
         return;
     }
     
-    // Filter jamaah berdasarkan query
     api.getJamaah().then(jamaah => {
         const filtered = jamaah.filter(j => j.nama.toLowerCase().includes(query));
         const container = document.getElementById('jamaahTable');
@@ -445,7 +509,7 @@ function handleSearchJamaah(e) {
                 <tbody>
                     ${filtered.map(j => `
                         <tr>
-                            <td>${j.id}</td>
+                            <td><strong>${j.id}</strong></td>
                             <td>${j.nama}</td>
                             <td>${j.gender}</td>
                             <td>${j.noHp}</td>
@@ -453,8 +517,8 @@ function handleSearchJamaah(e) {
                             <td>${j.pendidikan}</td>
                             <td><span class="status-badge status-${j.status.toLowerCase()}">${j.status}</span></td>
                             <td>
-                                <button class="btn btn-secondary" onclick="editJamaah('${j.id}')">✎</button>
-                                <button class="btn btn-danger" onclick="deleteJamaah('${j.id}')">🗑</button>
+                                <button class="btn btn-sm btn-secondary" onclick="editJamaah('${j.id}')">✏️</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteJamaah('${j.id}')">🗑</button>
                             </td>
                         </tr>
                     `).join('')}
@@ -471,34 +535,38 @@ function showFormTambahJamaah() {
     const modalBody = document.getElementById('modalBody');
     
     modalBody.innerHTML = `
-        <h2>Tambah Peserta Baru</h2>
-        <form id="formTambahJamaah">
+        <h2>➕ Tambah Peserta Baru</h2>
+        <form id="formTambahJamaah" style="display: grid; gap: 15px;">
             <div class="form-group">
                 <label>Nama Lengkap</label>
                 <input type="text" id="inputNama" required>
             </div>
-            <div class="form-group">
-                <label>Gender</label>
-                <select id="inputGender" required>
-                    <option value="Laki-laki">Laki-laki</option>
-                    <option value="Perempuan">Perempuan</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>No HP</label>
-                <input type="tel" id="inputNoHp" required>
+            <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <label>Gender</label>
+                    <select id="inputGender" required>
+                        <option value="Laki-laki">Laki-laki</option>
+                        <option value="Perempuan">Perempuan</option>
+                    </select>
+                </div>
+                <div>
+                    <label>No HP</label>
+                    <input type="tel" id="inputNoHp" required>
+                </div>
             </div>
             <div class="form-group">
                 <label>Alamat</label>
                 <textarea id="inputAlamat" required></textarea>
             </div>
-            <div class="form-group">
-                <label>Tempat Lahir</label>
-                <input type="text" id="inputTempatLahir" required>
-            </div>
-            <div class="form-group">
-                <label>Tanggal Lahir</label>
-                <input type="date" id="inputTglLahir" required>
+            <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <label>Tempat Lahir</label>
+                    <input type="text" id="inputTempatLahir" required>
+                </div>
+                <div>
+                    <label>Tanggal Lahir</label>
+                    <input type="date" id="inputTglLahir" required>
+                </div>
             </div>
             <div class="form-group">
                 <label>Pendidikan Terakhir</label>
@@ -512,8 +580,10 @@ function showFormTambahJamaah() {
                     <option value="S3">S3</option>
                 </select>
             </div>
-            <button type="submit" class="btn btn-primary">Simpan</button>
-            <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan</button>
+            </div>
         </form>
     `;
     
@@ -534,7 +604,7 @@ function showFormTambahJamaah() {
         await api.tambahJamaah(data);
         closeModal();
         loadJamaahTable();
-        alert('Peserta berhasil ditambahkan!');
+        alert('✅ Peserta berhasil ditambahkan!');
     });
     
     modal.classList.remove('hidden');
@@ -545,8 +615,8 @@ function showFormTambahKegiatan() {
     const modalBody = document.getElementById('modalBody');
     
     modalBody.innerHTML = `
-        <h2>Buat Kegiatan Baru</h2>
-        <form id="formTambahKegiatan">
+        <h2>📅 Buat Kegiatan Baru</h2>
+        <form id="formTambahKegiatan" style="display: grid; gap: 15px;">
             <div class="form-group">
                 <label>Nama Kegiatan</label>
                 <input type="text" id="inputNamaKegiatan" required>
@@ -557,17 +627,22 @@ function showFormTambahKegiatan() {
                     ${CONFIG.JENIS_KEGIATAN.map(j => `<option value="${j}">${j}</option>`).join('')}
                 </select>
             </div>
-            <div class="form-group">
-                <label>Tanggal</label>
-                <input type="date" id="inputTanggal" required>
+            <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <label>Tanggal</label>
+                    <input type="date" id="inputTanggal" required>
+                </div>
+                <div></div>
             </div>
-            <div class="form-group">
-                <label>Jam Mulai</label>
-                <input type="time" id="inputJamMulai" required>
-            </div>
-            <div class="form-group">
-                <label>Jam Selesai</label>
-                <input type="time" id="inputJamSelesai" required>
+            <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <label>Jam Mulai</label>
+                    <input type="time" id="inputJamMulai" required>
+                </div>
+                <div>
+                    <label>Jam Selesai</label>
+                    <input type="time" id="inputJamSelesai" required>
+                </div>
             </div>
             <div class="form-group">
                 <label>Lokasi</label>
@@ -577,8 +652,10 @@ function showFormTambahKegiatan() {
                 <label>Koordinat (Lat,Long)</label>
                 <input type="text" id="inputKoordinat" placeholder="-6.2088,106.8456">
             </div>
-            <button type="submit" class="btn btn-primary">Buat Kegiatan</button>
-            <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+                <button type="submit" class="btn btn-primary">Buat</button>
+            </div>
         </form>
     `;
     
@@ -599,7 +676,7 @@ function showFormTambahKegiatan() {
         await api.tambahKegiatan(data);
         closeModal();
         loadKegiatanTable();
-        alert('Kegiatan berhasil dibuat!');
+        alert('✅ Kegiatan berhasil dibuat!');
     });
     
     modal.classList.remove('hidden');
@@ -618,6 +695,7 @@ function deleteJamaah(id) {
     if (confirm('Yakin ingin menghapus?')) {
         api.deleteJamaah(id);
         loadJamaahTable();
+        alert('✅ Peserta berhasil dihapus');
     }
 }
 
@@ -629,6 +707,7 @@ function deleteKegiatan(id) {
     if (confirm('Yakin ingin menghapus?')) {
         api.deleteKegiatan(id);
         loadKegiatanTable();
+        alert('✅ Kegiatan berhasil dihapus');
     }
 }
 
@@ -648,11 +727,11 @@ function processAbsensi() {
     
     const result = document.getElementById('resultAbsensi');
     result.innerHTML = `
-        <div style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 5px;">
+        <div style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; padding: 20px; border-radius: 8px; text-align: center;">
             <h3>✅ Absensi Berhasil!</h3>
-            <p>ID Peserta: ${manualInput}</p>
-            <p>Status: Hadir</p>
-            <p>Waktu: ${new Date().toLocaleTimeString()}</p>
+            <p style="margin: 10px 0;">ID Peserta: <strong>${manualInput}</strong></p>
+            <p style="margin: 10px 0;">Status: <strong>HADIR</strong></p>
+            <p style="margin: 10px 0;">Waktu: <strong>${new Date().toLocaleTimeString()}</strong></p>
         </div>
     `;
     
@@ -667,41 +746,74 @@ function startCamera() {
 }
 
 function shareWhatsApp() {
-    const text = encodeURIComponent('Rekap Kehadiran Pengajian Pagi 26 Juli 2026\n\nHadir: 5\nIzin: 0\nAlpha: 5\n\nPersentase Hadir: 50%');
+    const text = encodeURIComponent('🕌 Rekap Kehadiran Pengajian Pagi 26 Juli 2026\n\nHadir: 5 ✅\nIzin: 0 ⏳\nAlpha: 5 ❌\n\nPersentase Hadir: 50%');
     window.open(`https://wa.me/?text=${text}`, '_blank');
 }
 
-function tambahMusyawarah() {
+function tambahMusyawarah4S() {
     const modal = document.getElementById('modal');
     const modalBody = document.getElementById('modalBody');
     
     modalBody.innerHTML = `
-        <h2>Catatan Musyawarah 4S</h2>
-        <form id="formMusyawarah">
+        <h2>📝 Catatan Musyawarah 4S</h2>
+        <form id="formMusyawarah" style="display: grid; gap: 15px;">
             <div class="form-group">
-                <label>Kiri 1 (Pengurus 1)</label>
-                <textarea id="inputKiri1" required></textarea>
+                <label style="color: #3498db; font-weight: bold;">🔵 Kiri 1 (Pengurus 1)</label>
+                <textarea id="inputKiri1" placeholder="Catatan dari Pengurus 1" required style="min-height: 120px;"></textarea>
             </div>
             <div class="form-group">
-                <label>Kiri 2 (Pengurus 2)</label>
-                <textarea id="inputKiri2" required></textarea>
+                <label style="color: #9b59b6; font-weight: bold;">🟣 Kanan 1 (Pengurus 2)</label>
+                <textarea id="inputKanan1" placeholder="Catatan dari Pengurus 2" required style="min-height: 120px;"></textarea>
             </div>
             <div class="form-group">
-                <label>Kanan 1 (Pengurus 3)</label>
-                <textarea id="inputKanan1" required></textarea>
+                <label style="color: #2ecc71; font-weight: bold;">🟢 Kiri 2 (Pengurus 3)</label>
+                <textarea id="inputKiri2" placeholder="Catatan dari Pengurus 3" required style="min-height: 120px;"></textarea>
             </div>
             <div class="form-group">
-                <label>Kanan 2 (All Tim 7)</label>
-                <textarea id="inputKanan2" required></textarea>
+                <label style="color: #e74c3c; font-weight: bold;">🔴 Kanan 2 All (Semua)</label>
+                <textarea id="inputKanan2" placeholder="Kesimpulan dari semua pengurus" required style="min-height: 120px;"></textarea>
             </div>
-            <button type="submit" class="btn btn-primary">Simpan</button>
-            <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan</button>
+            </div>
         </form>
     `;
     
     document.getElementById('formMusyawarah')?.addEventListener('submit', (e) => {
         e.preventDefault();
-        alert('Catatan musyawarah berhasil disimpan!');
+        alert('✅ Catatan musyawarah 4S berhasil disimpan!');
+        closeModal();
+    });
+    
+    modal.classList.remove('hidden');
+}
+
+function tambahMusyawarahTim7() {
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+    
+    modalBody.innerHTML = `
+        <h2>📝 Catatan Tim 7</h2>
+        <form id="formTim7" style="display: grid; gap: 15px;">
+            <div class="form-group">
+                <label>Catatan Tim 7</label>
+                <textarea id="inputCatatanTim7" placeholder="Catatan dan keputusan Tim 7" required style="min-height: 150px;"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Link Google Drive (Optional)</label>
+                <input type="url" id="inputDriveLinkTim7" placeholder="https://docs.google.com/document/...">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan</button>
+            </div>
+        </form>
+    `;
+    
+    document.getElementById('formTim7')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        alert('✅ Catatan Tim 7 berhasil disimpan!');
         closeModal();
     });
     
