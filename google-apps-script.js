@@ -1,12 +1,9 @@
-// E-KERTALANGU - Google Apps Script Backend
+// E-KERTALANGU - Google Apps Script Backend v2
 // Deploy sebagai Web App dan copy URL ke config.js
 
 const SPREADSHEET_ID = '1JDDFEFG7PG1VnHFtQRII6SThtBDGVozEdxlxTM25hYU';
 const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 
-// ============================================
-// MAIN FUNCTION - Handle HTTP Requests
-// ============================================
 function doPost(e) {
   try {
     const params = JSON.parse(e.postData.contents);
@@ -15,12 +12,10 @@ function doPost(e) {
     let response = {};
     
     switch(action) {
-      // Auth
       case 'login':
         response = handleLogin(params);
         break;
       
-      // Jamaah
       case 'getJamaah':
         response = getJamaah();
         break;
@@ -34,7 +29,6 @@ function doPost(e) {
         response = deleteJamaah(params);
         break;
       
-      // Kegiatan
       case 'getKegiatan':
         response = getKegiatan();
         break;
@@ -48,7 +42,6 @@ function doPost(e) {
         response = deleteKegiatan(params);
         break;
       
-      // Absensi
       case 'getAbsensi':
         response = getAbsensi(params);
         break;
@@ -56,34 +49,24 @@ function doPost(e) {
         response = tambahAbsensi(params);
         break;
       
-      // Catatan Musyawarah
       case 'getMusyawarah':
         response = getMusyawarah(params);
         break;
       case 'tambahMusyawarah':
         response = tambahMusyawarah(params);
         break;
-      case 'updateMusyawarah':
-        response = updateMusyawarah(params);
-        break;
       
-      // Catatan Tim 7
       case 'getCatatanTim7':
         response = getCatatanTim7(params);
         break;
       case 'tambahCatatanTim7':
         response = tambahCatatanTim7(params);
         break;
-      case 'updateCatatanTim7':
-        response = updateCatatanTim7(params);
-        break;
       
-      // QR Code
       case 'generateQRCode':
         response = generateQRCode(params);
         break;
       
-      // Laporan
       case 'getLaporanBulan':
         response = getLaporanBulan(params);
         break;
@@ -102,9 +85,6 @@ function doPost(e) {
   }
 }
 
-// ============================================
-// AUTHENTICATION
-// ============================================
 function handleLogin(params) {
   try {
     const usersSheet = ss.getSheetByName('USERS');
@@ -131,9 +111,6 @@ function handleLogin(params) {
   }
 }
 
-// ============================================
-// JAMAAH (PESERTA)
-// ============================================
 function getJamaah() {
   try {
     const sheet = ss.getSheetByName('JAMAAH');
@@ -168,7 +145,6 @@ function tambahJamaah(params) {
     const sheet = ss.getSheetByName('JAMAAH');
     const jamaah = getJamaah().data;
     
-    // Generate ID
     let lastNum = 0;
     jamaah.forEach(j => {
       const num = parseInt(j.id.split('-')[1]);
@@ -176,7 +152,6 @@ function tambahJamaah(params) {
     });
     const newId = 'KRT-' + String(lastNum + 1).padStart(4, '0');
     
-    // Add row
     sheet.appendRow([
       newId,
       params.nama,
@@ -242,9 +217,6 @@ function deleteJamaah(params) {
   }
 }
 
-// ============================================
-// KEGIATAN
-// ============================================
 function getKegiatan() {
   try {
     const sheet = ss.getSheetByName('KEGIATAN');
@@ -279,7 +251,6 @@ function tambahKegiatan(params) {
     const sheet = ss.getSheetByName('KEGIATAN');
     const kegiatan = getKegiatan().data;
     
-    // Generate ID
     let lastNum = 0;
     kegiatan.forEach(k => {
       const num = parseInt(k.id.split('-')[1]);
@@ -352,9 +323,6 @@ function deleteKegiatan(params) {
   }
 }
 
-// ============================================
-// ABSENSI
-// ============================================
 function getAbsensi(params) {
   try {
     const sheet = ss.getSheetByName('ABSENSI');
@@ -388,7 +356,17 @@ function tambahAbsensi(params) {
     const sheet = ss.getSheetByName('ABSENSI');
     const absensi = getAbsensi({}).data;
     
-    // Generate ID
+    // Check duplicate - anti duplicate nama
+    const isDuplicate = absensi.some(a => 
+      a.jamaahId === params.jamaahId && 
+      a.kegiatanId === params.kegiatanId &&
+      a.tanggal === new Date().toISOString().split('T')[0]
+    );
+    
+    if (isDuplicate) {
+      return {success: false, message: 'Peserta sudah absen hari ini untuk kegiatan ini'};
+    }
+    
     let lastNum = 0;
     absensi.forEach(a => {
       const num = parseInt(a.id.split('-')[1]);
@@ -412,9 +390,6 @@ function tambahAbsensi(params) {
   }
 }
 
-// ============================================
-// CATATAN MUSYAWARAH 4S
-// ============================================
 function getMusyawarah(params) {
   try {
     const sheet = ss.getSheetByName('CATATAN_MUSYAWARAH');
@@ -428,13 +403,10 @@ function getMusyawarah(params) {
         musyawarah.push({
           id: data[i][0],
           kegiatanId: data[i][1],
-          kiri1: data[i][2],
-          kiri2: data[i][3],
-          kanan1: data[i][4],
-          kanan2: data[i][5],
-          driveLink: data[i][6],
-          dibuatOleh: data[i][7],
-          tanggal: data[i][8]
+          catatan: data[i][2],
+          driveLink: data[i][3],
+          dibuatOleh: data[i][4],
+          tanggal: data[i][5]
         });
       }
     }
@@ -460,10 +432,7 @@ function tambahMusyawarah(params) {
     sheet.appendRow([
       newId,
       params.kegiatanId,
-      params.kiri1,
-      params.kiri2,
-      params.kanan1,
-      params.kanan2,
+      params.catatan,
       params.driveLink || '',
       params.dibuatOleh,
       new Date().toISOString().split('T')[0]
@@ -475,36 +444,6 @@ function tambahMusyawarah(params) {
   }
 }
 
-function updateMusyawarah(params) {
-  try {
-    const sheet = ss.getSheetByName('CATATAN_MUSYAWARAH');
-    const data = sheet.getDataRange().getValues();
-    
-    for (let i = 1; i < data.length; i++) {
-      if (data[i][0] === params.id) {
-        sheet.getRange(i + 1, 2, 1, 8).setValues([[
-          params.kegiatanId,
-          params.kiri1,
-          params.kiri2,
-          params.kanan1,
-          params.kanan2,
-          params.driveLink,
-          params.dibuatOleh,
-          data[i][8]
-        ]]);
-        return {success: true, message: 'Catatan berhasil diupdate'};
-      }
-    }
-    
-    return {success: false, message: 'Catatan tidak ditemukan'};
-  } catch(error) {
-    return {success: false, message: error.toString()};
-  }
-}
-
-// ============================================
-// CATATAN TIM 7
-// ============================================
 function getCatatanTim7(params) {
   try {
     const sheet = ss.getSheetByName('CATATAN_TIM7');
@@ -559,33 +498,6 @@ function tambahCatatanTim7(params) {
   }
 }
 
-function updateCatatanTim7(params) {
-  try {
-    const sheet = ss.getSheetByName('CATATAN_TIM7');
-    const data = sheet.getDataRange().getValues();
-    
-    for (let i = 1; i < data.length; i++) {
-      if (data[i][0] === params.id) {
-        sheet.getRange(i + 1, 2, 1, 5).setValues([[
-          params.kegiatanId,
-          params.catatan,
-          params.driveLink,
-          params.dibuatOleh,
-          data[i][5]
-        ]]);
-        return {success: true, message: 'Catatan berhasil diupdate'};
-      }
-    }
-    
-    return {success: false, message: 'Catatan tidak ditemukan'};
-  } catch(error) {
-    return {success: false, message: error.toString()};
-  }
-}
-
-// ============================================
-// QR CODE & UTILITY
-// ============================================
 function generateQRCode(params) {
   try {
     const text = params.jamaahId;
@@ -596,9 +508,6 @@ function generateQRCode(params) {
   }
 }
 
-// ============================================
-// LAPORAN
-// ============================================
 function getLaporanBulan(params) {
   try {
     const jamaah = getJamaah().data;
@@ -608,7 +517,6 @@ function getLaporanBulan(params) {
     const bulan = params.bulan;
     const tahun = params.tahun;
     
-    // Filter berdasarkan bulan
     const kegiatanBulan = kegiatan.filter(k => {
       const [y, m] = k.tanggal.split('-');
       return m === bulan && y === tahun;
@@ -619,7 +527,6 @@ function getLaporanBulan(params) {
       return m === bulan && y === tahun;
     });
     
-    // Statistik
     const hadir = absensiData.filter(a => a.status === 'Hadir').length;
     const izin = absensiData.filter(a => a.status === 'Izin').length;
     const alpha = absensiData.filter(a => a.status === 'Alpha').length;
@@ -643,12 +550,8 @@ function getLaporanBulan(params) {
   }
 }
 
-// ============================================
-// SETUP DATABASE SHEETS (RUN ONCE)
-// ============================================
 function setupDatabase() {
   try {
-    // Hapus sheet lama jika ada
     const sheetNames = ['JAMAAH', 'KEGIATAN', 'ABSENSI', 'CATATAN_MUSYAWARAH', 'CATATAN_TIM7', 'USERS'];
     
     sheetNames.forEach(name => {
@@ -656,31 +559,25 @@ function setupDatabase() {
       if (sheet) ss.deleteSheet(sheet);
     });
     
-    // JAMAAH
     let sheet = ss.insertSheet('JAMAAH');
     sheet.appendRow(['ID', 'Nama', 'Gender', 'No HP', 'Alamat', 'Tempat Lahir', 'Tanggal Lahir', 'Pendidikan', 'Status', 'Tanggal Daftar']);
     sheet.appendRow(['KRT-0001', 'Ahmad Fahri', 'Laki-laki', '081234567890', 'Jl. Merdeka No. 10', 'Jakarta', '1990-05-15', 'S1', 'Aktif', '2024-01-15']);
     sheet.appendRow(['KRT-0002', 'Siti Nurhaliza', 'Perempuan', '081234567891', 'Jl. Sudirman', 'Bandung', '1995-03-20', 'S1', 'Aktif', '2024-01-20']);
     
-    // KEGIATAN
     sheet = ss.insertSheet('KEGIATAN');
     sheet.appendRow(['ID', 'Nama', 'Jenis', 'Tanggal', 'Jam Mulai', 'Jam Selesai', 'Lokasi', 'Koordinat', 'Status', 'Peserta Terdaftar']);
-    sheet.appendRow(['KGT-001', 'Pengajian Pagi', 'Pengajian Pagi', '2026-07-26', '09:00', '10:00', 'Masjid An-Nur', '-6.2088,106.8456', 'Aktif', '50']);
+    sheet.appendRow(['KGT-001', 'Pengajian Pagi', 'Pengajian Rutin', '2026-07-27', '09:00', '10:00', 'Masjid An-Nur', '-6.2088,106.8456', 'Aktif', '50']);
     
-    // ABSENSI
     sheet = ss.insertSheet('ABSENSI');
     sheet.appendRow(['ID', 'Kegiatan ID', 'Jamaah ID', 'Status', 'Waktu Absen', 'Catatan', 'Tanggal']);
-    sheet.appendRow(['ABS-0001', 'KGT-001', 'KRT-0001', 'Hadir', '09:15', '', '2026-07-26']);
+    sheet.appendRow(['ABS-0001', 'KGT-001', 'KRT-0001', 'Hadir', '09:15', '', '2026-07-27']);
     
-    // CATATAN_MUSYAWARAH
     sheet = ss.insertSheet('CATATAN_MUSYAWARAH');
-    sheet.appendRow(['ID', 'Kegiatan ID', 'Kiri 1', 'Kiri 2', 'Kanan 1', 'Kanan 2', 'Drive Link', 'Dibuat Oleh', 'Tanggal']);
+    sheet.appendRow(['ID', 'Kegiatan ID', 'Catatan', 'Drive Link', 'Dibuat Oleh', 'Tanggal']);
     
-    // CATATAN_TIM7
     sheet = ss.insertSheet('CATATAN_TIM7');
     sheet.appendRow(['ID', 'Kegiatan ID', 'Catatan', 'Drive Link', 'Dibuat Oleh', 'Tanggal']);
     
-    // USERS
     sheet = ss.insertSheet('USERS');
     sheet.appendRow(['Username', 'Password', 'Role', 'Name']);
     sheet.appendRow(['admin', 'admin', 'admin', 'Administrator']);
@@ -698,5 +595,5 @@ function doGet(e) {
     return ContentService.createTextOutput(JSON.stringify(setupDatabase()))
       .setMimeType(ContentService.MimeType.JSON);
   }
-  return ContentService.createTextOutput('E-KERTALANGU API v1.0');
+  return ContentService.createTextOutput('E-KERTALANGU API v2.0');
 }
